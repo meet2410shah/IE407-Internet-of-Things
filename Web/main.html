@@ -99,6 +99,7 @@
 	const url2 = "https://api.thingspeak.com/update?api_key="+write_api+"&field2="
 	var allData={};
 	
+	// var currentDate = new Date();
 	// Retrive data on every set_delay time
 	var set_delay = 5000,
 	callout = function () {
@@ -113,7 +114,11 @@
 			// console.log(res.feeds.length,Object.keys(res.feeds).length)
 			if(res.feeds.length !== Object.keys(allData).length){
 				res.feeds.forEach(element => {
-				allData[element.created_at]=element.field1;
+				
+				if(element.field1!==null){
+					// console.log(element)
+					allData[element.created_at]=element.field1;
+				}
 				// console.log(element.created_at,element.field1)
 				});
 				generateChart(allData)
@@ -147,13 +152,16 @@
 
 	
 	function setThreshold(){
+		// if()
 		$('#threshold').text(currentTh)
 		$.ajax({
 			url:url2+currentTh,
 			type:'GET',
 		})
 		.done(function(res){
+			console.log(currentTh)
 			console.log('threshold set...')
+			console.log(res)
 		})
 	}
 	
@@ -174,15 +182,15 @@
 		setThreshold()
 	}
 	function pipeON(){
-		currentTh=0
-		setThreshold()
-	}
-	function pipeOFF(){
 		currentTh=100
 		setThreshold()
 	}
+	function pipeOFF(){
+		currentTh=0
+		setThreshold()
+	}
 
-
+	Chart.defaults.global.animation = false;
 	function generateChart(rdata){
 	new Chart(document.getElementById("line-chart"), {
 		type: 'line',
