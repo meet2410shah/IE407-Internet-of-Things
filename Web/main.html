@@ -101,9 +101,9 @@
 	
 	// var currentDate = new Date();
 	// Retrive data on every set_delay time
-	var set_delay = 5000,
+	var set_delay = 1000,
 	callout = function () {
-		console.log("ok")
+		// console.log("ok")
         $.ajax({
             url: url1,
 			type: 'GET',
@@ -113,15 +113,22 @@
             // console.log("got data")
 			// console.log(res.feeds.length,Object.keys(res.feeds).length)
 			if(res.feeds.length !== Object.keys(allData).length){
-				res.feeds.forEach(element => {
-				
-				if(element.field1!==null){
-					// console.log(element)
-					allData[element.created_at]=element.field1;
+				allData = {}
+				for(let i = 40; i < 100; i++) {
+					allData[res.feeds[i].created_at] = res.feeds[i].field1
 				}
-				// console.log(element.created_at,element.field1)
-				});
+				// res.feeds.forEach(element => {
+				
+				// if(element.field1!==null){
+				// 	// console.log(element)
+				// 	allData[element.created_at]=element.field1;
+				// }
+				// // console.log(element.created_at,element.field1)
+
+				// });
+				
 				generateChart(allData)
+
 			}
         })
         .always(function () {
