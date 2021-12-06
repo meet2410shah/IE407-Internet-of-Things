@@ -101,7 +101,10 @@
 	
 	// var currentDate = new Date();
 	// Retrive data on every set_delay time
-	var set_delay = 1000,
+	function toIST(cur){
+		return new Date(cur).toLocaleString("en-US", {timeZone: 'Asia/Kolkata'})
+	}
+	var set_delay = 10000,
 	callout = function () {
 		// console.log("ok")
         $.ajax({
@@ -112,10 +115,15 @@
         .done(function (res) {
             // console.log("got data")
 			// console.log(res.feeds.length,Object.keys(res.feeds).length)
-			if(res.feeds.length !== Object.keys(allData).length){
+			nn = res.feeds.length-1
+			// console.log(toIST(res.feeds[nn].created_at) == Object.keys(allData)[Object.keys(allData).length-1])
+			// if(res.feeds.length !== Object.keys(allData).length){
+			if(!allData || toIST(res.feeds[nn].created_at) != Object.keys(allData)[Object.keys(allData).length-1]){
 				allData = {}
 				for(let i = 40; i < 100; i++) {
-					allData[res.feeds[i].created_at] = res.feeds[i].field1
+					if(res.feeds[i].field1){
+						allData[toIST(res.feeds[i].created_at)] = res.feeds[i].field1
+					}
 				}
 				// res.feeds.forEach(element => {
 				
@@ -150,26 +158,75 @@
 			n = res.feeds.length
 			// console.log(n)
 			// console.log(res.feeds[n-1])
-			currentTh=res.feeds[n-1].field2?parseInt(res.feeds[n-1].field2):30//30 default threshold
+			// currentTh=res.feeds[n-1].field2?parseInt(res.feeds[n-1].field2):30//30 default threshold
+			for(let i=res.feeds.length-1;i>=0;i--){
+				if(res.feeds[i].field2){
+					currentTh=parseInt(res.feeds[i].field2)
+					break
+				}
+			}
 			console.log(currentTh)
 			$('#threshold').text(currentTh)
 		})
 	}
 	getThreshold()
 
-	
+	var lastReqTime = new Date()
+	lastReqTime.setDate(lastReqTime.getDate()-1)
 	function setThreshold(){
-		// if()
-		$('#threshold').text(currentTh)
+		var ck=false;
 		$.ajax({
-			url:url2+currentTh,
-			type:'GET',
+            url: url1,
+			type: 'GET',
+			dataType: 'json',
+        })
+		.done(function (res){
+			// var lastTime = new Date();
+			var curDate = new Date();
+			// lastTime.setDate(lastTime.getDate()-1)
+
+			// for(let i=res.feeds.length-1;i>=0;i--){
+			// 	if(res.feeds[i].field2){
+			// 		console.log(res.feeds[i].field2,res.feeds[i].created_at)
+			// 		lastTime = new Date(res.feeds[i].created_at)
+			// 		break
+			// 	}
+			// }
+			// console.log(lastTime,curDate)
+			// console.log(typeof curDate,typeof lastTime)
+			// console.log(Math.abs(curDate-lastTime)>20000)
+			// console.log(parseInt(Math.abs(curDate-lastTime)/1000))
+			// ck = (Math.abs(curDate-lastTime) > 20000)?true:false
+
+			ck = Math.abs(curDate-lastReqTime)>20000?true:false
+			if(ck==true){
+				changeThreshold();
+				ck=false
+				lastReqTime=new Date()
+				alert(`New threshold has been set to: ${currentTh}`)
+			}
+			else{
+				alert('You cannot make more than 1 request within 15 seconds interval')
+			}
 		})
-		.done(function(res){
-			console.log(currentTh)
-			console.log('threshold set...')
-			console.log(res)
-		})
+	}
+	
+	function changeThreshold(){
+		// if(isValid==true){
+			$('#threshold').text(currentTh)
+			$.ajax({
+				url:url2+currentTh,
+				type:'GET',
+			})
+			.done(function(res){
+				console.log(currentTh)
+				console.log('threshold set...')
+				console.log(res)
+			})
+		// }
+		// else{
+			// alert('You cannot make more than 1 request within 15 seconds interval')
+		// }
 	}
 	
 	function incrementThreshold(){
@@ -205,7 +262,7 @@
 			labels: Object.keys(rdata),
 			datasets: [{ 
 				data: Object.values(rdata),
-				label: "Humidity",
+				label: "Moisture",
 				borderColor: "#3e95cd",
 				fill: false
 			}
@@ -221,7 +278,7 @@
 					// }, 
 					// scaleLabel: {
 					//         display: true,
-					//         labelString: 'Temperature'
+					//         labelString: 'Time'
 					//     }
 					display: false
 				}
@@ -232,13 +289,13 @@
 					}  , 
 					scaleLabel: {
 							display: true,
-							labelString: 'Humidity'
+							labelString: 'Moisture'
 						} 
 				}]
 			}, 
 			title: {
 			display: true,
-			text: 'Humidity vs. Temperature'
+			text: 'Moisture vs. Time'
 			}
 		}
 		});
